@@ -1,0 +1,37 @@
+#ifndef TEMPERATURE_H
+#define TEMPERATURE_H
+//configuration
+#define RTD_CONFIG_READ 0x00
+#define RTD_CONFIG_WRITE 0x80
+
+#define RTD_BIAS 0x80
+#define RTD_MODEAUTO 0x40
+#define RTD_1SHOT 0x20
+#define RTD_3WIRE 0x10
+#define RTD_FAULTSTAT_READ 0x02
+#define RTD_50HZ 0x01
+
+#define RTD_MSB 0x01
+#define RTD_LSB 0x02
+#define RTD_HFAULTMSB 0x03
+#define RTD_HFAULTLSB 0x04
+#define RTD_LFAULTMSB 0x05
+#define RTD_LFAULTLSB 0x06
+#define RTD_FAULTSTAT 0x07
+
+#define RTD_FAULT_HIGHTHRESH 0x80
+#define RTD_FAULT_LOWTHRESH 0x40
+#define RTD_FAULT_REFINLOW 0x20
+#define RTD_FAULT_REFINHIGH 0x10
+#define RTD_FAULT_RTDINLOW 0x08
+#define RTD_FAULT_OVUV 0x04
+
+
+float RREF=470;
+float RNOMINAL=100.0;
+float a=0.00390830;
+float b=-0.0000005775;
+uint8_t ADC_READ= RTD_1SHOT|RTD_BIAS;
+
+
+#endif
