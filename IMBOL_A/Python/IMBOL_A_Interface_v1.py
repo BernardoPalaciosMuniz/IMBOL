@@ -126,7 +126,9 @@ MCUA_REL_2      =int('0x02',16) #VACUUM
 MCUA_REL_3      =int('0x04',16) #N2
 MCUA_REL_4      =int('0x08',16) #N7000
 MCUA_REL_5      =int('0x10',16) #DOSING
+MCUA_REL_6      =int('0x20',16) #RETRIEVE
 MCUA_REL_8      =int('0x80',16) #R. LIGHT
+
 
 
 def WRITE_READ(MCU,adress,nbytes_r=0,data_w=0,nbytes_w=0):
@@ -488,8 +490,8 @@ def LEDS_control_update(data):
     
 tkinter.Label(master=manualframe, text='MANUAL CONTROL',fg='gray30' ).grid(row=0,column=0)
 buttons_manual=[]
-buttons_manual_label_MCUA=["MAIN","VACUUM","N2","N-7000","DOSING","R.LIGHT"]
-buttons_manual_data_MCUA=[MCUA_REL_1,MCUA_REL_2,MCUA_REL_3,MCUA_REL_4,MCUA_REL_5,MCUA_REL_8]
+buttons_manual_label_MCUA=["MAIN","VACUUM","N2","N-7000","DOSING","R.LIGHT","RETRIEVE"]
+buttons_manual_data_MCUA=[MCUA_REL_1,MCUA_REL_2,MCUA_REL_3,MCUA_REL_4,MCUA_REL_5,MCUA_REL_8,MCUA_REL_6]
 
 buttons_manual_label_MCUB=["WIPER","W. DIR","CONNECT MCUs"]
 buttons_manual_data_MCUB=[MCUB_EN_B,MCUB_DIR_B]
@@ -512,10 +514,10 @@ def buttons_manual_defcommand(i):
         else:
             connect_MCUs()
             if connection_state_A:
-                buttons_A=buttons_ambient+buttons_control+buttons_ambient+buttons_manual[:5]+buttons_ambient+buttons_log
+                buttons_A=buttons_ambient+buttons_control+buttons_ambient+buttons_manual[:nA]+buttons_ambient+buttons_log
                 enable_buttons(buttons_A)
             if connection_state_B:
-                buttons_B=buttons_manual[5:-1]
+                buttons_B=buttons_manual[nA:-1]
                 enable_buttons(buttons_B)
 
     return f
@@ -696,7 +698,7 @@ def animation_main(i):
             MCU_A_WRITE(bits_relay&(~MCUA_REL_4))        
 
     if connection_state_B:
-        data_new_B=bits_MCU_B<<6
+        data_new_B=bits_MCU_B<<7
         data_led|=data_new_B
     if bit_log:
         if (time.time()-t0_log<=t_log):
