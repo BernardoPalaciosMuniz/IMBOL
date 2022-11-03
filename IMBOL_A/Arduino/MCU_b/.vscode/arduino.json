@@ -1,0 +1,7 @@
+{
+    "configuration": "mode=on",
+    "board": "arduino:megaavr:nona4809",
+    "sketch": "MCU_b.ino",
+    "port": "/dev/tty.usbmodem141101",
+    "programmer": "medbg"
+}
