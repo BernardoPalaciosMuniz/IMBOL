@@ -64,7 +64,7 @@ void rel_config()
 #define DO_1  12
 #define DO_2  11
 uint32_t trig_tick=millis();
-uint32_t trig_period=4000;
+uint32_t trig_period=6000;
 uint8_t trig_bit=0;
 void lights_on(){
   digitalWrite(DO_2,LOW);
