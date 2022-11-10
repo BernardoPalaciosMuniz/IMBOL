@@ -63,6 +63,7 @@ REGISTER_CONNECT    =int('0x06',16)
 REGISTER_TOGGLE     =int('0x07',16)
 REGISTER_TRIGGER    =int('0x08',16)
 REGISTER_LIGHTSON   =int('0x09',16)
+REGISTER_TRIG_PERIOD =int('0x0B',16)
 
 REGISTER_WRITE_MCU_B       =int('0x00',16)
 REGISTER_TOGGLE_MCU_B      =int('0x02',16)
@@ -175,6 +176,8 @@ def MCU_A_RTD2(T,RREF):
     return output
 def MCU_A_DOSE_T(data):
     return WRITE_READ(MCU_A,REGISTER_RTD1,2,data,2)
+def MCU_A_TRIG_T(data):
+    return WRITE_READ(MCU_A,REGISTER_TRIG_PERIOD,2,data,2)
 def MCU_A_DOSE_S():
     WRITE_READ(MCU_A,REGISTER_DOSE_S)
 def MCU_A_LIGHTSON():
@@ -226,9 +229,11 @@ import collections
 animation_interval=500
 plot_samples=100
 plot_x=np.linspace(-plot_samples*animation_interval/1000,0,plot_samples)
-plot_labels=["P_abs [mbar]","T_surf [ºC]","T_res [ºC]","T_ext [ºC]","T_tip [ºC]","ADC_out [%](surf blue, res red)"]
+# plot_labels=["P_abs [mbar]","T_surf [ºC]","T_res [ºC]","T_ext [ºC]","T_tip [ºC]","ADC_out [%](surf blue, res red)"]
+# plot_units=['{:04.0f}mbar']+['{:03.1f}°C']*4+['{:03.1f}%']*2
+plot_labels=["P [mbar]","T[ºC]","PWM_DutyC [%]"]
 plot_units=['{:04.0f}mbar']+['{:03.1f}°C']*4+['{:03.1f}%']*2
-plot_limits=[1050]+[70]*4+[110]*2
+plot_limits=[1050,70,110]
 
 def plot_init():
     nax=len(plot_labels)
@@ -236,7 +241,7 @@ def plot_init():
     zeros=[0]*ndata
     for i in range(ndata):
         zeros[i]=collections.deque(np.zeros(plot_samples))
-    Plot = Figure(figsize=(19.20, 10.24), dpi=100)
+    Plot = Figure(figsize=(9.6, 10.24), dpi=100)
     axes=[0]*nax
     if nax<=3: 
         ncols=1
@@ -253,7 +258,7 @@ def plot_init():
         y=zeros[i]
         ax.plot(plot_x,y)
         ax.scatter(0, y[-1])
-        ax.text(0, y[-1]+plot_limits[i]*.05, plot_units[i].format(y[-1]),horizontalalignment='left')
+        ax.text(0, y[-1], plot_units[i].format(y[-1]),horizontalalignment='left')
         ax.set_ylim(0,plot_limits[i])
         ax.set_xlim(plot_x[0],plot_x[-1]+7)
         ax.set_ylabel(plot_labels[i])
@@ -263,22 +268,46 @@ def plot_init():
 def plot_update(data_new):
     axes=Plot.get_axes()
     nax=len(axes)
-    def plot(i,ax,col):
+    ndata=len(data)
+    def plot(i,ax,col,lab):
         y=data[i]
         y.popleft()
         y.append(data_new[i])
-        ax.plot(plot_x,y,c=col)
+        ax.plot(plot_x,y,c=col,label=lab+' '+plot_units[i].format(y[-1]))
         ax.scatter(0, y[-1],c=col)
-        ax.text(0, y[-1]+plot_limits[i]*.05, plot_units[i].format(y[-1]),horizontalalignment='left')
-    for i in range(nax):
-        ax=axes[i]
-        ax.cla()
-        plot(i,ax,'b')
-        if i==nax-1:
-            plot(i+1,ax,'r')
-        ax.set_ylim(0,plot_limits[i])
+        ax.legend()
+
+        
+    
+        
+    colors=['tab:blue','tab:orange','tab:red','tab:purple']
+    labels=['P_abs','Surf','Res','Ext','Sample','Surf','Res']
+
+    for i in range(ndata):
+
+        if i==0:
+            i1=0
+            i2=0
+            ax=axes[i1]
+            ax.cla()
+        if i==1:
+            i1=1
+            i2=0
+            ax=axes[i1]
+            ax.cla()
+        if i==5:
+            i1=2
+            i2=0
+            ax=axes[i1]
+            ax.cla()
+        
+        plot(i,ax,colors[i2],labels[i])
+        i2=i2+1
+        ax.set_ylim(0,plot_limits[i1])
         ax.set_xlim(plot_x[0],plot_x[-1]+7)
-        ax.set_ylabel(plot_labels[i])
+        ax.set_ylabel(plot_labels[i1])
+        
+
 
         
     
@@ -305,10 +334,11 @@ bigfont=tkFont.Font(size=16, weight='bold')
 
 canvas = FigureCanvasTkAgg(Plot, master=root)  # A tk.DrawingArea.
 canvas.draw()
+# canvas.get_tk_widget().pack(side=tkinter.LEFT)
 canvas.get_tk_widget().pack(side=tkinter.LEFT, fill=tkinter.BOTH, expand=1)
 
 def make_line():
-    xline=400
+    xline=600
     line=tkinter.Canvas(master=root,width=xline,height=5)
     line.pack(side=tkinter.TOP)
     line.create_line(0,3,xline,3,fill="grey70")
@@ -442,12 +472,14 @@ def STOP():
     i_run=0
     bit_flush=0
     bit_vacate=0
+def RETRIEVE():
+    MCU_A_WRITE(MCUA_REL_1|MCUA_REL_6)
 
 
 
 buttons_control=[]
-buttons_control_label=["RUN","STOP","VACATE","FLUSH","TRIG"]
-buttons_control_command=[RUN,STOP,VACATE,FLUSH,TRIG]
+buttons_control_label=["RUN","STOP","VACATE","FLUSH","TRIG","RETRIEVE"]
+buttons_control_command=[RUN,STOP,VACATE,FLUSH,TRIG,RETRIEVE]
 
 
 for i in range(len(buttons_control_label)):
@@ -460,7 +492,7 @@ def LEDS_control_init():
     y0_LED=8
     textsize=10
     spacing_LED=10
-    LED_LABEL=["MAIN","VACUUM","N2","N-7000","DOSING","REL6","REL7","R.Light","Float","Wiper","W.Dir."]
+    LED_LABEL=["MAIN","VACUUM","N2","N-7000","DOSING","RETRIEVE","REL7","R.Light","Float","Wiper","W.Dir."]
     nLED=len(LED_LABEL)
     LEDS_id=[0]*nLED
     LEDS_colors=['red']*nLED
@@ -521,11 +553,11 @@ def buttons_manual_defcommand(i):
                 enable_buttons(buttons_B)
 
     return f
-
+ncols=4
 for i in range(len(buttons_manual_label_MCUA)+len(buttons_manual_label_MCUB)):
     buttons_manual_command.append(buttons_manual_defcommand(i))
     buttons_manual.append(tkinter.Button(master=manualframe, text=buttons_manual_label[i],width=normal_width,height=normal_height,state=tkinter.DISABLED, command=buttons_manual_command[i]))
-    buttons_manual[i].grid(row=i//3+1,column=i%3)
+    buttons_manual[i].grid(row=i//ncols+1,column=i%ncols)
 buttons_manual[-1].configure(state=tkinter.NORMAL)
 LED_init(manualframe,4,1,connection_state_A)
 LED_init(manualframe,4,2,connection_state_B)
@@ -536,10 +568,10 @@ tkinter.Label(master=ambientframe, text='AMBIENT CONTROL',fg='gray30' ).grid(row
 buttons_ambient=[]
 labels_ambient=[]
 inputs_ambient=[]
-ncols=3
-buttons_ambient_label=["P_vac","P_N2","T_srf","T_res","t_dose","t_log"]
-buttons_ambient_units=["[mbar]","[mbar]","[°C]","[°C]","[ms]","[s]"]
-init_values_ambient=[50,950,0,0,500,3600]
+ncols=4
+buttons_ambient_label=["P_vac","P_N2","T_srf","T_res","t_trig","t_dose","t_log"]
+buttons_ambient_units=["[mbar]","[mbar]","[°C]","[°C]","[ms]","[ms]","[s]"]
+init_values_ambient=[50,950,0,0,6000,500,3600]
 
 P_vac=init_values_ambient[0]
 def ambient_set_P_vac():
@@ -574,8 +606,18 @@ def ambient_set_T_res():
     inputs_ambient[i].delete(0,tkinter.END)
     labels_ambient[i].configure(text=buttons_ambient_label[i]+"="+str(data)+str(buttons_ambient_units[i]))
 
-def ambient_set_t_dose():
+
+
+def ambient_set_t_trig():
     i=4
+    data=int(inputs_ambient[i].get())
+    data=MCU_A_TRIG_T(data)
+    data=int.from_bytes(data,'big')
+    inputs_ambient[i].delete(0,tkinter.END)
+    labels_ambient[i].configure(text=buttons_ambient_label[i]+"="+str(data)+str(buttons_ambient_units[i]))
+
+def ambient_set_t_dose():
+    i=5
     data=int(inputs_ambient[i].get())
     data=MCU_A_DOSE_T(data)
     data=int.from_bytes(data,'big')
@@ -585,7 +627,7 @@ def ambient_set_t_dose():
 t_log=init_values_ambient[5]
 def ambient_set_t_log():
     global t_log
-    i=5
+    i=6
     data=int(inputs_ambient[i].get())
     t_log=int(data)
     inputs_ambient[i].delete(0,tkinter.END)
@@ -593,7 +635,7 @@ def ambient_set_t_log():
 
 
 
-buttons_ambient_command=[ambient_set_P_vac,ambient_set_P_flush,ambient_set_T_surf,ambient_set_T_res,ambient_set_t_dose,ambient_set_t_log]
+buttons_ambient_command=[ambient_set_P_vac,ambient_set_P_flush,ambient_set_T_surf,ambient_set_T_res,ambient_set_t_trig,ambient_set_t_dose,ambient_set_t_log]
 
 for i in range(len(buttons_ambient_label)):
     labels_ambient.append(tkinter.Label(master=ambientframe, text=buttons_ambient_label[i]+"="+str(init_values_ambient[i])+str(buttons_ambient_units[i]),width=normal_width,height=normal_height))

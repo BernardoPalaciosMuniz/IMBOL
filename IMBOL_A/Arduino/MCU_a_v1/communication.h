@@ -1,17 +1,18 @@
 #ifndef COMMUNICATION_H
 #define COMMUNICATION_H
 
-#define REGISTER_READ       0x00
-#define REGISTER_WRITE      0x01
-#define REGISTER_RTD1       0x02
-#define REGISTER_RTD2       0x03
-#define REGISTER_DOSE_T     0x04
-#define REGISTER_DOSE_S     0x05
-#define REGISTER_CONNECT    0x06
-#define REGISTER_TOGGLE     0x07
-#define REGISTER_TRIGGER    0x08
-#define REGISTER_LIGHTSON   0x09
-#define REGISTER_LIGHTSOFF  0x0A
+#define REGISTER_READ        0x00
+#define REGISTER_WRITE       0x01
+#define REGISTER_RTD1        0x02
+#define REGISTER_RTD2        0x03
+#define REGISTER_DOSE_T      0x04
+#define REGISTER_DOSE_S      0x05
+#define REGISTER_CONNECT     0x06
+#define REGISTER_TOGGLE      0x07
+#define REGISTER_TRIGGER     0x08
+#define REGISTER_LIGHTSON    0x09
+#define REGISTER_LIGHTSOFF   0x0A
+#define REGISTER_TRIG_PERIOD 0x0B
 
 void serial(){
   uint8_t data;
@@ -88,6 +89,15 @@ void serial(){
         break;
       case REGISTER_LIGHTSOFF:
         lights_off();
+        break;
+      case REGISTER_TRIG_PERIOD:
+        while (Serial.available() == 0) {}
+        data16=(Serial.read()<<8)&0xFF00;
+        while (Serial.available() == 0) {}
+        data16|=(Serial.read())&0x00FF;
+        trig_period=data16;
+        Serial.write((data16 >> 8)  & 0xFF);
+        Serial.write(data16 & 0xFF);
         break;
       case REGISTER_TRIGGER:
         data=REL_5;
