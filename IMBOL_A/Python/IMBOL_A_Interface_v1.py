@@ -183,6 +183,7 @@ def MCU_A_DOSE_S():
 def MCU_A_LIGHTSON():
     WRITE_READ(MCU_A,REGISTER_LIGHTSON)
 def MCU_A_TRIGGER():
+    global H
     output=[]
     data=WRITE_READ(MCU_A,REGISTER_TRIGGER,10)
     output.append(P_mbar(data[:2]))#P
@@ -190,6 +191,7 @@ def MCU_A_TRIGGER():
         output.append(T_C(data[x:x+2],RREF0))#T*2RREF0
     for x in range(6,9,2):
         output.append(T_C(data[x:x+2],RREF1))#T*2RREF1
+    output.append(H)
     timestamp=datetime.today()
     output.append(timestamp.hour)
     output.append(timestamp.minute)
@@ -569,9 +571,9 @@ buttons_ambient=[]
 labels_ambient=[]
 inputs_ambient=[]
 ncols=4
-buttons_ambient_label=["P_vac","P_N2","T_srf","T_res","t_trig","t_dose","t_log"]
-buttons_ambient_units=["[mbar]","[mbar]","[°C]","[°C]","[ms]","[ms]","[s]"]
-init_values_ambient=[50,950,0,0,6000,500,3600]
+buttons_ambient_label=["P_vac","P_N2","T_srf","T_res","t_trig","t_dose","t_log","H_fall"]
+buttons_ambient_units=["[mbar]","[mbar]","[°C]","[°C]","[ms]","[ms]","[s]","[mm]"]
+init_values_ambient=[50,950,0,0,6000,500,3600,1200]
 
 P_vac=init_values_ambient[0]
 def ambient_set_P_vac():
@@ -624,7 +626,7 @@ def ambient_set_t_dose():
     inputs_ambient[i].delete(0,tkinter.END)
     labels_ambient[i].configure(text=buttons_ambient_label[i]+"="+str(data)+str(buttons_ambient_units[i]))
 
-t_log=init_values_ambient[5]
+t_log=init_values_ambient[6]
 def ambient_set_t_log():
     global t_log
     i=6
@@ -633,9 +635,17 @@ def ambient_set_t_log():
     inputs_ambient[i].delete(0,tkinter.END)
     labels_ambient[i].configure(text=buttons_ambient_label[i]+"="+str(data)+str(buttons_ambient_units[i]))
 
+H=init_values_ambient[7]
+def ambient_set_H():
+    global H
+    i=7
+    data=int(inputs_ambient[i].get())
+    H=int(data)
+    inputs_ambient[i].delete(0,tkinter.END)
+    labels_ambient[i].configure(text=buttons_ambient_label[i]+"="+str(data)+str(buttons_ambient_units[i]))
 
 
-buttons_ambient_command=[ambient_set_P_vac,ambient_set_P_flush,ambient_set_T_surf,ambient_set_T_res,ambient_set_t_trig,ambient_set_t_dose,ambient_set_t_log]
+buttons_ambient_command=[ambient_set_P_vac,ambient_set_P_flush,ambient_set_T_surf,ambient_set_T_res,ambient_set_t_trig,ambient_set_t_dose,ambient_set_t_log,ambient_set_H]
 
 for i in range(len(buttons_ambient_label)):
     labels_ambient.append(tkinter.Label(master=ambientframe, text=buttons_ambient_label[i]+"="+str(init_values_ambient[i])+str(buttons_ambient_units[i]),width=normal_width,height=normal_height))
@@ -646,10 +656,12 @@ for i in range(len(buttons_ambient_label)):
     buttons_ambient[i].grid(row=(i//ncols)*3+3,column=i%ncols)
 
 #############LOG############
-
+log=[]
 def log_start():
     global bit_log
     global t0_log
+    global log
+    log=[]
     t0_log=time.time()
     bit_log=1
 def log_stop():
@@ -668,7 +680,7 @@ def log_trig():
     global timestamp_session
     if output_trig:
         log_exp.append(output_trig)
-        head="P [mbar],T_surf [°C],T_res [°C],T_ext [°C],T_needle [°C],time_H,time_M,time_S"
+        head="P [mbar],T_surf [°C],T_res [°C],T_ext [°C],T_needle [°C],H_set [mm],time_H,time_M,time_S"
         timestamp=timestamp_session
         a = np.array(log_exp)
         np.savetxt("/Users/bernardo/Desktop/exp_log_"+timestamp+".csv", a, delimiter=",", header=head)
@@ -691,7 +703,7 @@ for i in range(len(buttons_log_label)):
 
 
 nrows_log=8
-head_log=['P','T_s','T_r','T_e','T_n','h','m','s']
+head_log=['P','T_s','T_r','T_e','T_n','H_set','h','m','s']
 ncols_log=len(head_log)
 
 cells_log=[]
@@ -721,7 +733,7 @@ LED_init(logframe,2,1,bit_log)
 
 
 
-log=[]
+
 def animation_main(i):
     global log
     global t0_log
