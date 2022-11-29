@@ -1,0 +1,6 @@
+{
+    "configuration": "cache=on,speed=120,opt=small,maxqspi=50,usbstack=arduino,debug=off",
+    "board": "adafruit:samd:adafruit_feather_m4",
+    "port": "/dev/tty.usbmodem14413201",
+    "sketch": "MCU_a_exp.ino"
+}
