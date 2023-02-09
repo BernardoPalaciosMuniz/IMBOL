@@ -55,7 +55,7 @@
             "cStandard": "c11",
             "cppStandard": "c++11",
             "defines": [
-                "__SKETCH_NAME__=\"\"\"MCU_a.ino\"\"\"",
+                "__SKETCH_NAME__=\"\"\"MCU_a_v1.ino\"\"\"",
                 "F_CPU=120000000L",
                 "ARDUINO=10607",
                 "ARDUINO_FEATHER_M4",

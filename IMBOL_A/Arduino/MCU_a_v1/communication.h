@@ -14,6 +14,8 @@
 #define REGISTER_LIGHTSOFF   0x0A
 #define REGISTER_TRIG_PERIOD 0x0B
 
+
+
 void serial(){
   uint8_t data;
   uint16_t data16;
@@ -27,8 +29,9 @@ void serial(){
         Serial.write((data16>>8)&0xFF);
         Serial.write(data16&0xFF);
         for (int i = 0; i < sizeof(RTD)/sizeof(RTD[0]); i++){
-          Serial.write((RTD[i]>>8)&0xFF);
-          Serial.write(RTD[i]&0xFF);
+          data16=RTD[i];
+          Serial.write((data16>>8)&0xFF);
+          Serial.write(data16&0xFF);
         }
         data16=HEATER_PID1.Run(RTD[0]);
         Serial.write((data16>>8)&0xFF);
@@ -69,6 +72,7 @@ void serial(){
        Serial.write((data16 >> 8)  & 0xFF);
        Serial.write(data16 & 0xFF);
        break;
+     
       case REGISTER_DOSE_T:
         while (Serial.available() == 0) {}
         data16=(Serial.read()<<8)&0xFF00;
@@ -110,10 +114,12 @@ void serial(){
         Serial.write((data16>>8)&0xFF);
         Serial.write(data16&0xFF);
         for (int i = 0; i < sizeof(RTD)/sizeof(RTD[0]); i++){
-          Serial.write((RTD[i]>>8)&0xFF);
-          Serial.write(RTD[i]&0xFF);
+          data16=RTD[i];
+          Serial.write((data16>>8)&0xFF);
+          Serial.write(data16&0xFF);
         }
         break;
+      
       case REGISTER_CONNECT:
         Serial.write("MCU_a\n");
         break;

@@ -1,6 +1,6 @@
 #include <SPI.h>
 #include <PID_v2.h>
-double Kp1 = 2, Ki1 = 5, Kd1 = 1;
+double Kp1 = 150, Ki1 = 0, Kd1 = 50;
 double Kp2 = 2, Ki2 = 5, Kd2 = 1;
 PID_v2 HEATER_PID1(Kp1, Ki1, Kd1, PID::Direct);
 PID_v2 HEATER_PID2(Kp2, Ki2, Kd2, PID::Direct);

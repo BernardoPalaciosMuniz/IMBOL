@@ -135,7 +135,7 @@ def animation_main(i):
             log(T_AMB_new,P_new)
 
     
-ports = ['COM%s' % (i + 1) for i in range(256)]
+ports = ['/dev/tty.usbmodem142101']
 #if('boli' in globals() and boli.isOpen() == True):
 #    boli.close()
     

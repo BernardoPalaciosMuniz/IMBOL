@@ -2,43 +2,71 @@
 
 #include "board_header.h"
 #include "sensors.h"
-#include "communication.h"
-
 
 void setup() {
-  pinMode(LED_A,OUTPUT);
-  pinMode(LED_B,OUTPUT);
-  pinMode(LED_C,OUTPUT);
-  pinMode(LED_D,OUTPUT);
-  digitalWrite(LED_A,0);
-  digitalWrite(LED_B,0);
 
-  Serial.begin(200000);
-  SPI_init();
-  P_EMA = P_get();
+
+  /**********************************************************
+    Initialize the pressure sensor ADC spi communication, as
+    instructed on the datasheet of the onboard MCP3201 ADC
+  ***********************************************************/
+
+  pinMode (P_CS, OUTPUT);
+  digitalWrite(P_CS, HIGH);
+  delay(100);
+  digitalWrite(P_CS, LOW);
+  delay(100);
+  /**********************************************************
+    Start comunicaction
+  ***********************************************************/
+  SPI.begin();
+  Serial.begin(9600);
+  Serial.write("BOLI");
+
+  /**********************************************************
+    Set inputs and outputs and set CS pins to HIGH
+  ***********************************************************/
+
+
+  digitalWrite(P_CS, HIGH);
+
+
+
+
+  /**********************************************************
+    Initialize the PID controller and the timer from the output
+    //TC1 channel 0, the IRQ for that channel and the desired
+    frequency. This timer is currently not used
+  ***********************************************************/
   
+///  HEATER_PID.SetOutputLimits(0, 256);//0 to full scale on the digital potentiometer
+//  HEATER_PID.Start(get_temp(T1_CS), 0, temp2ADC(T_SURFACE_SET));
+
+
+  //startTimer(TC1, 0, TC3_IRQn, 100);
+
+
+  /**********************************************************
+    Set the configuration of the temperature sensors and get
+    pressure once, ussually the first read is faulty
+  ***********************************************************/
+  get_pressure(P_CS);
+  delay(50);
+
+  
+  
+
+  
+
 }
 
 void loop() {
+  Serial.println(get_pressure(P_CS));
+  delay(1000);
 
 
-  P_poll_EMA();
-  RTD_poll();
-  serial();
   
-}
 
-void SPI_init(){
-    int CSs[] { P_CS,RTD1_CS,RTD2_CS};
-
-    SPI.begin();
-    for (int i = 0; i < sizeof(CSs)/sizeof(CSs[0]); i++)
-    {
-        pinMode(CSs[i], OUTPUT);
-        digitalWrite(CSs[i], HIGH);
-    }
-
-    P_config();
-    RTD_config();
+  
 
 }

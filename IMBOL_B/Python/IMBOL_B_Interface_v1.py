@@ -65,7 +65,7 @@ def connect_MCUs():
     global MCU_A
     global MCU_A_port
 
-    baudrate_MX = 200000
+    baudrate_MX = 9600
     baudrate_Nano = 9600
 
     listports = serial.tools.list_ports.comports()
@@ -99,7 +99,7 @@ def connect_MCUs():
                     MCU_A_port=ports[i]
                     MCU_A = serial.Serial(ports[i], baudrates[i], timeout=0.5)
                     connection_state_A = 1
-                    print("I have conccted")
+                    time.sleep(0.5)
 
 
 
@@ -127,9 +127,10 @@ def MCU_A_READ():
     nbytes=6
     output=[]
     data=WRITE_READ(MCU_A,REGISTER_READ,nbytes)
-    output.append(P_mbar(data[0:2]))#P
-    for x in range(2,5,2):
+    output.append(P_mbar(data[:2]))#P
+    for x in [2,4]:
         output.append(T_C(data[x:x+2],RREF0))#T*2RREF0
+    print(output)
     return output
 
 

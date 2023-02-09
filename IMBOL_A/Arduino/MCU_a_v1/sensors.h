@@ -76,6 +76,12 @@ uint32_t RTD_tick = micros();
 uint32_t RTD_interval = 21000;
 uint16_t RTD[sizeof(RTD_CS)/sizeof(RTD_CS[0])]{};
 
+////////
+float RTD_EMA_LP_freq = 10e-6;      // Low-pass filter cut-off frequency [MHz]
+uint32_t RTD_EMA_tick[sizeof(RTD_CS)/sizeof(RTD_CS[0])]{};
+       
+////////
+
 
 
 #define RTD_CONFIG_READ 0x00
@@ -130,6 +136,8 @@ void RTD_config(){
     {
         delay(50);
         RTD_write(RTD_CS[i], RTD_CONFIG_WRITE, RTD_MODEAUTO|RTD_BIAS);
+        RTD[i]=0;
+        RTD_EMA_tick[i]=micros();
     }
 }
 
@@ -140,14 +148,44 @@ uint16_t RTD_get(uint8_t CS) {
   return ADC_output;
 }
 
+// void RTD_poll(){
+//   uint32_t now = micros();
+  
+//   if ((now - RTD_tick) > RTD_interval) {
+//     // Enough time has passed -> Acquire a new reading.
+//     for (int i = 0; i < sizeof(RTD)/sizeof(RTD[0]); i++)
+//     {
+//         RTD[i]=RTD_get(RTD_CS[i]);
+//     }
+    
+//     RTD_tick = now;
+
+//   } 
+
+// }
+
+    
+
 void RTD_poll(){
   uint32_t now = micros();
+  uint32_t now2;
+  uint32_t EMA_obtained_interval;
+  float alpha;
+  float compute;
+  uint16_t RTDnow;
   
   if ((now - RTD_tick) > RTD_interval) {
     // Enough time has passed -> Acquire a new reading.
     for (int i = 0; i < sizeof(RTD)/sizeof(RTD[0]); i++)
     {
-        RTD[i]=RTD_get(RTD_CS[i]);
+        RTDnow=RTD_get(RTD_CS[i]);
+        now2=micros();
+        EMA_obtained_interval = now2 - RTD_EMA_tick[i];
+        alpha = 1.f - exp(-float(EMA_obtained_interval) * P_EMA_LP_freq);
+        compute = RTD[i]+alpha * (RTDnow - RTD[i]);
+        compute = round(compute);
+        RTD_EMA_tick[i] = now2;
+        RTD[i]=compute;
     }
     
     RTD_tick = now;
@@ -155,7 +193,5 @@ void RTD_poll(){
   } 
 
 }
-
-
 
 #endif

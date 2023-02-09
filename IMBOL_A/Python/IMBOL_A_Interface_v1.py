@@ -64,6 +64,8 @@ REGISTER_TOGGLE     =int('0x07',16)
 REGISTER_TRIGGER    =int('0x08',16)
 REGISTER_LIGHTSON   =int('0x09',16)
 REGISTER_TRIG_PERIOD =int('0x0B',16)
+REGISTER_TUNE_PID1 =int('0x0C',16)
+REGISTER_TUNE_PID2 =int('0x0D',16)
 
 REGISTER_WRITE_MCU_B       =int('0x00',16)
 REGISTER_TOGGLE_MCU_B      =int('0x02',16)
@@ -174,6 +176,10 @@ def MCU_A_RTD2(T,RREF):
     output= WRITE_READ(MCU_A,REGISTER_RTD2,2,data,2)
     output=T_C(output,RREF0)
     return output
+def MCU_A_TUNE_PID1(data):
+    return WRITE_READ(MCU_A,REGISTER_RTD1,2,data,2)
+def MCU_A_TUNE_PID2(data):
+    return WRITE_READ(MCU_A,REGISTER_RTD2,2,data,2)
 def MCU_A_DOSE_T(data):
     return WRITE_READ(MCU_A,REGISTER_RTD1,2,data,2)
 def MCU_A_TRIG_T(data):
@@ -200,6 +206,9 @@ def MCU_A_TRIGGER():
     
 def MCU_A_STOP():
     MCU_A_WRITE(0)
+
+
+    
 
 
 
@@ -235,7 +244,8 @@ plot_x=np.linspace(-plot_samples*animation_interval/1000,0,plot_samples)
 # plot_units=['{:04.0f}mbar']+['{:03.1f}°C']*4+['{:03.1f}%']*2
 plot_labels=["P [mbar]","T[ºC]","PWM_DutyC [%]"]
 plot_units=['{:04.0f}mbar']+['{:03.1f}°C']*4+['{:03.1f}%']*2
-plot_limits=[1050,70,110]
+plot_limits_high=[1050,60,105]
+plot_limits_low=[0,19,0]
 
 def plot_init():
     nax=len(plot_labels)
@@ -261,7 +271,7 @@ def plot_init():
         ax.plot(plot_x,y)
         ax.scatter(0, y[-1])
         ax.text(0, y[-1], plot_units[i].format(y[-1]),horizontalalignment='left')
-        ax.set_ylim(0,plot_limits[i])
+        ax.set_ylim(plot_limits_low[i],plot_limits_high[i])
         ax.set_xlim(plot_x[0],plot_x[-1]+7)
         ax.set_ylabel(plot_labels[i])
     return [Plot,zeros]
@@ -305,7 +315,7 @@ def plot_update(data_new):
         
         plot(i,ax,colors[i2],labels[i])
         i2=i2+1
-        ax.set_ylim(0,plot_limits[i1])
+        ax.set_ylim(plot_limits_low[i1],plot_limits_high[i1])
         ax.set_xlim(plot_x[0],plot_x[-1]+7)
         ax.set_ylabel(plot_labels[i1])
         
@@ -570,7 +580,7 @@ tkinter.Label(master=ambientframe, text='AMBIENT CONTROL',fg='gray30' ).grid(row
 buttons_ambient=[]
 labels_ambient=[]
 inputs_ambient=[]
-ncols=4
+ncols=5
 buttons_ambient_label=["P_vac","P_N2","T_srf","T_res","t_trig","t_dose","t_log","H_fall"]
 buttons_ambient_units=["[mbar]","[mbar]","[°C]","[°C]","[ms]","[ms]","[s]","[mm]"]
 init_values_ambient=[50,950,0,0,6000,500,3600,1200]
@@ -608,8 +618,6 @@ def ambient_set_T_res():
     inputs_ambient[i].delete(0,tkinter.END)
     labels_ambient[i].configure(text=buttons_ambient_label[i]+"="+str(data)+str(buttons_ambient_units[i]))
 
-
-
 def ambient_set_t_trig():
     i=4
     data=int(inputs_ambient[i].get())
@@ -643,6 +651,9 @@ def ambient_set_H():
     H=int(data)
     inputs_ambient[i].delete(0,tkinter.END)
     labels_ambient[i].configure(text=buttons_ambient_label[i]+"="+str(data)+str(buttons_ambient_units[i]))
+
+
+  
 
 
 buttons_ambient_command=[ambient_set_P_vac,ambient_set_P_flush,ambient_set_T_surf,ambient_set_T_res,ambient_set_t_trig,ambient_set_t_dose,ambient_set_t_log,ambient_set_H]

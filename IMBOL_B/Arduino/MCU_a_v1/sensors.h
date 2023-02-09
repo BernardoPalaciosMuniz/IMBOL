@@ -34,12 +34,50 @@ The second byte contains  the 7 less significant bits followed by B1 (which is a
   return ADC_output;
 }
 
+
+float get_pressure(int CS){
+/*
+ Tis function reads the 12 bit ADC output sent through SPI at chipselect pin CS. 
+ Then converts to current using current calibration constants A_R and B_R, where R stands for receiver, 
+ and finally converts to pressure from calibration constants A_P and B_P, where P stands for pressure. 
+ The current convertion calibration constants for the receiver where obtained in the lab, using a high 
+ quality multimeter. While the pressure calibration constants come from the sensor manufacturer. 
+ The constant values can be found on the pressure_calibration.h header file 
+*/
+  byte first_byte;
+  byte second_byte;
+  unsigned int ADC_output;
+  float current_output;
+  float pressure_output;
+
+  SPI.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE1)); //We initialize SPI comunication
+  digitalWrite(CS, LOW); //We set the ADC CS pin to low to start receiving data
+  //We receive 16 bits from the ADC in 2 bytes
+  first_byte = SPI.transfer(0);
+  second_byte = SPI.transfer(0);
+  digitalWrite(CS, HIGH); //We set the ADC CS pin to high to stop receiving data
+  SPI.endTransaction(); //finalize SPI comunication
+/*The first byte contains 2 null bits, followed by  one low bit and the 5 most significant bits (see MCP3201 ADC datasheet) 
+The second byte contains  the 7 less significant bits followed by B1 (which is a repeated bit) (see MCP3201 ADC datasheet)*/
+ 
+  first_byte=first_byte<<2; //Shift to the left and pad with 0s to get rid of null bits 
+  first_byte=first_byte>>2; //Shift to the right and pad with 0s to format the byte
+  second_byte=second_byte>>1; //Shift to the right to get rid of the repeated B1 bit
+ 
+
+  ADC_output = first_byte<<7| second_byte; //Fill the bits on the ADC output int variable 
+  // current_output=A_R*ADC_output+B_R; //convert output to mA
+  // pressure_output=A_P*current_output+B_P;// convert output to mbar
+  //return pressure_output;
+  return ADC_output;
+}
+
 void P_config(){
-    delay(50);
+    delay(100);
     digitalWrite(P_CS, LOW);
     delay(100);
     digitalWrite(P_CS, HIGH);
-    P_get();
+    get_pressure(P_CS);
 }
 
 bool P_poll_EMA() {
@@ -55,6 +93,7 @@ bool P_poll_EMA() {
     alpha = 1.f - exp(-float(EMA_obtained_interval) * P_EMA_LP_freq);
     P_EMA += alpha * (P_get() - P_EMA);
     P_EMA_tick = now;
+    
     return true;
 
   } else {

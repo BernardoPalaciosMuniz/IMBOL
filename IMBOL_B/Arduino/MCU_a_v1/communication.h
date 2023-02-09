@@ -16,7 +16,7 @@ void serial(){
       uint8_t adress = Serial.read();
       switch (adress) {
         case REGISTER_READ:
-        data16=round(P_EMA);
+        data16=get_pressure();
         Serial.write((data16>>8)&0xFF);
         Serial.write(data16&0xFF);
         for (int i = 0; i < sizeof(RTD)/sizeof(RTD[0]); i++){
@@ -26,13 +26,11 @@ void serial(){
         
         break;
       case REGISTER_CONNECT:
-        digitalWrite(LED_A,1);
         Serial.write("MCU_a\n");
         break;
       default:
         while (Serial.available() > 0) Serial.read();
         break;
-        
      }
      
     }
