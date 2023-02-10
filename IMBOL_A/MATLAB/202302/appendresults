@@ -1,0 +1,20 @@
+import csv
+
+from os import listdir
+
+
+if ("Results.csv" in listdir())and('Results_temp.csv' in listdir()): 
+    with open('Results_temp.csv', 'r') as f1:
+        lastresult = f1.readlines()[-1]
+    with open('Results.csv', 'r') as f2:
+        allresults=f2.read()
+        if lastresult in allresults:print('Repiteme esta...puto')
+        else:
+            with open('Results.csv', 'a') as f2:
+                f2.write(lastresult)
+elif 'Results_temp.csv' in listdir():
+    with open('Results_temp.csv', 'r') as f1:
+        lastresult = f1.read()
+    with open('Results.csv', 'a') as f2:
+        f2.write(lastresult)
+else: print('No ta el temp...pendejo') 
